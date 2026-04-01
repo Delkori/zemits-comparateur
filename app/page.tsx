@@ -21,10 +21,18 @@ const FEATURES = [
   {
     icon: "⚖️",
     title: "Comparateur expert",
-    desc: "Comparez cote a cote les machines Zemits sur 20+ criteres : prix, technologie, garantie, ROI.",
+    desc: "Comparez cote a cote les machines sur 20+ criteres : prix, technologie, garantie, ROI.",
     cta: "Comparer",
     href: "/comparateur",
     badge: "Objectif"
+  },
+  {
+    icon: "🎓",
+    title: "Formations certifiantes",
+    desc: "Laser, RF, cryolipolyse : formations pratiques eligibles OPCO/FAFCEA pour developper votre institut.",
+    cta: "Voir les formations",
+    href: "/formations",
+    badge: "Certifiant"
   },
   {
     icon: "📋",
@@ -66,6 +74,7 @@ export default function Home() {
           <div className="hidden md:flex items-center gap-8">
             <Link href="/guide" className="text-sm font-medium text-gray-600 hover:text-[#6C47FF] transition">Guide achat</Link>
             <Link href="/comparateur" className="text-sm font-medium text-gray-600 hover:text-[#6C47FF] transition">Comparateur</Link>
+            <Link href="/formations" className="text-sm font-medium text-gray-600 hover:text-[#6C47FF] transition">Formations</Link>
             <Link href="/contact" className="text-sm font-medium text-gray-600 hover:text-[#6C47FF] transition">Devis</Link>
           </div>
           <div className="flex items-center gap-3">
@@ -84,6 +93,7 @@ export default function Home() {
           <div className="md:hidden border-t border-gray-100 bg-white px-4 py-4 flex flex-col gap-3">
             <Link href="/guide" className="text-sm font-medium text-gray-700 py-2">Guide achat</Link>
             <Link href="/comparateur" className="text-sm font-medium text-gray-700 py-2">Comparateur</Link>
+            <Link href="/formations" className="text-sm font-medium text-gray-700 py-2">Formations</Link>
             <Link href="/contact" className="text-sm font-medium text-gray-700 py-2">Devis</Link>
             <Link href="/guide" className="bg-[#6C47FF] text-white px-5 py-3 rounded-xl text-sm font-bold text-center">Trouver ma machine</Link>
           </div>
@@ -138,7 +148,7 @@ export default function Home() {
             <h2 className="text-3xl font-black text-gray-900 mb-3">Tout ce dont vous avez besoin</h2>
             <p className="text-gray-500">Du premier contact jusqu'a l'achat, on vous accompagne.</p>
           </div>
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {FEATURES.map((f) => (
               <div key={f.title} className="bg-white rounded-3xl p-8 shadow-sm hover:shadow-xl transition group border border-gray-100">
                 <div className="flex items-start justify-between mb-6">
@@ -240,10 +250,16 @@ export default function Home() {
         <div className="max-w-2xl mx-auto text-center">
           <h2 className="text-4xl font-black text-white mb-4">Pret a trouver votre machine ?</h2>
           <p className="text-purple-200 text-lg mb-10">Plus de 500 professionnels ont deja utilise notre guide. Gratuit, rapide, sans engagement.</p>
-          <Link href="/guide"
-            className="inline-flex items-center gap-2 bg-white text-[#6C47FF] px-12 py-5 rounded-2xl font-black text-lg hover:bg-purple-50 transition shadow-2xl">
-            Demarrer maintenant — Gratuit →
-          </Link>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link href="/guide"
+              className="inline-flex items-center justify-center gap-2 bg-white text-[#6C47FF] px-12 py-5 rounded-2xl font-black text-lg hover:bg-purple-50 transition shadow-2xl">
+              Demarrer maintenant — Gratuit →
+            </Link>
+            <Link href="/formations"
+              className="inline-flex items-center justify-center gap-2 bg-white/20 text-white px-8 py-5 rounded-2xl font-bold text-lg hover:bg-white/30 transition">
+              Voir les formations 🎓
+            </Link>
+          </div>
         </div>
       </section>
 
@@ -266,6 +282,7 @@ export default function Home() {
                 <div className="flex flex-col gap-2 text-sm">
                   <Link href="/guide" className="hover:text-white transition">Guide achat</Link>
                   <Link href="/comparateur" className="hover:text-white transition">Comparateur</Link>
+                  <Link href="/formations" className="hover:text-white transition">Formations</Link>
                   <Link href="/contact" className="hover:text-white transition">Devis gratuit</Link>
                 </div>
               </div>
