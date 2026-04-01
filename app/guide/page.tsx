@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 import Link from 'next/link'
-import { machines } from '../comparateur/page'
+import { machines, Machine } from '../../lib/machines'
 
 type Answers = {
   type_soin?: string
@@ -55,37 +55,28 @@ const STEPS = [
   },
 ]
 
-function scoreMachine(m: typeof machines[0], answers: Answers): number {
+function scoreMachine(m: Machine, answers: Answers): number {
   let score = m.scoreROI
-
-  // Affinite categorie
   if (answers.type_soin === 'visage' && m.categorie === 'Visage') score += 12
   if (answers.type_soin === 'corps' && m.categorie === 'Corps') score += 12
   if (answers.type_soin === 'corps' && m.categorie === 'Minceur') score += 8
   if (answers.type_soin === 'polyvalent' && m.categorie === 'Polyvalent') score += 15
   if (answers.type_soin === 'acne' && m.categorie === 'Visage') score += 8
-
-  // Budget
   if (answers.budget === 'moins5k' && m.prixMin < 5000) score += 15
   if (answers.budget === '5k-10k' && m.prixMin >= 4000 && m.prixMin <= 10000) score += 12
   if (answers.budget === '10k-20k' && m.prixMin >= 8000 && m.prixMin <= 20000) score += 12
   if (answers.budget === 'plus20k' && m.prixMin >= 14000) score += 10
-
-  // Usage intensif => privilegie SAV rapide
   if (answers.usage === 'intensif' && m.sav === '48h') score += 10
   if (answers.usage === 'intensif' && m.nbTechno >= 3) score += 5
-
-  // Experience debutant => formation importante
   if (answers.experience === 'debutant' && m.formation) score += 10
   if (answers.experience === 'debutant' && m.garantie === '2 ans') score += 5
-
   return Math.min(score, 100)
 }
 
 export default function GuidePage() {
   const [step, setStep] = useState(0)
   const [answers, setAnswers] = useState<Answers>({})
-  const [results, setResults] = useState<Array<typeof machines[0] & { scoreFinal: number }> | null>(null)
+  const [results, setResults] = useState<Array<Machine & { scoreFinal: number }> | null>(null)
   const [loading, setLoading] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
 
@@ -95,7 +86,6 @@ export default function GuidePage() {
   const handleAnswer = (value: string) => {
     const newAnswers = { ...answers, [currentStep.id]: value }
     setAnswers(newAnswers)
-
     if (step < STEPS.length - 1) {
       setStep(step + 1)
     } else {
@@ -111,11 +101,7 @@ export default function GuidePage() {
     }
   }
 
-  const reset = () => {
-    setStep(0)
-    setAnswers({})
-    setResults(null)
-  }
+  const reset = () => { setStep(0); setAnswers({}); setResults(null) }
 
   return (
     <main className="min-h-screen bg-white font-sans flex flex-col">
@@ -203,7 +189,7 @@ export default function GuidePage() {
                     </div>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <div className="text-xs text-gray-500">Score ROI</div>
+                        <span className="text-xs text-gray-500">Score ROI</span>
                         <div className="w-24 h-1.5 bg-gray-100 rounded-full overflow-hidden">
                           <div className="h-full bg-[#6C47FF] rounded-full" style={{ width: `${m.scoreFinal}%` }} />
                         </div>
