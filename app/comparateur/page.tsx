@@ -1,107 +1,217 @@
+'use client'
+
+import { useState } from 'react'
 import Link from 'next/link'
 
-type Formation = {
+type Machine = {
   id: string
-  titre: string
-  description: string
-  durée: string
-  prix: number
-  sessions: Array<{
-    ville: string
-    dates: string
-    prixPromo?: number
-  }>
-  prérequis: string
-  certification: boolean
+  nom: string
+  marque: string
+  categorie: string
+  technologie: string
+  prixMin: number
+  prixMax: number
+  nbTechno: number
+  formation: boolean
+  sav: string
+  garantie: string
+  fabrication: string
+  scoreROI: number
+  badge?: string
 }
 
-const formations: Formation[] = [
+export const machines: Machine[] = [
   {
-    id: 'laser-ipl',
-    titre: 'Épilation Laser & IPL',
-    description: 'Devenez expert laser/IPL selon l’arrêté du 19/02/2025. Théorie + pratique + PSC. Valable 5 ans.',
-    durée: '25h (9h théorie + 16h pratique)',
-    prix: 1380,
-    sessions: [
-      { ville: 'Paris', dates: '19-21 mai 2026' },
-      { ville: 'Marseille', dates: '27-29 mai 2026' },
-      { ville: 'Nancy', dates: '10-12 juin 2026' },
-    ],
-    prérequis: 'Diplôme esthétique ou infirmier(ère)',
-    certification: true,
+    id: 'zemits-dermapure',
+    nom: 'DermaPure Pro',
+    marque: 'Zemits',
+    categorie: 'Visage',
+    technologie: 'Hydradermabrasion + LED + RF',
+    prixMin: 3900,
+    prixMax: 4900,
+    nbTechno: 3,
+    formation: true,
+    sav: '48h',
+    garantie: '2 ans',
+    fabrication: 'EU',
+    scoreROI: 92,
+    badge: 'Meilleur rapport qualite/prix',
   },
   {
-    id: 'radiofrequence',
-    titre: 'Radiofréquence & Micro-ondes',
-    description: 'Maîtrisez RF monopolaire/bipolaire pour raffermissement cutané. Protocoles visage/corps.',
-    durée: '16h (6h théorie + 10h pratique)',
-    prix: 980,
-    sessions: [
-      { ville: 'Paris', dates: '15-16 avril 2026' },
-      { ville: 'Lyon', dates: '20-21 avril 2026' },
-      { ville: 'Marseille', dates: '25-26 avril 2026' },
-    ],
-    prérequis: 'Diplôme esthétique',
-    certification: true,
+    id: 'zemits-verstand',
+    nom: 'Verstand Ultra',
+    marque: 'Zemits',
+    categorie: 'Corps',
+    technologie: 'Cavitation + RF + Vide',
+    prixMin: 4500,
+    prixMax: 5500,
+    nbTechno: 3,
+    formation: true,
+    sav: '48h',
+    garantie: '2 ans',
+    fabrication: 'EU',
+    scoreROI: 89,
   },
   {
-    id: 'cryolipolyse',
-    titre: 'Cryolipolyse Professionnelle',
-    description: 'Techniques de cryoadipolyse sécurisées. Gestion des applicateurs et suivi client.',
-    durée: '12h (4h théorie + 8h pratique)',
-    prix: 790,
-    sessions: [
-      { ville: 'Paris', dates: '8-9 mai 2026' },
-      { ville: 'Lyon', dates: '13-14 mai 2026' },
-      { ville: 'Bordeaux', dates: '18-19 mai 2026' },
-    ],
-    prérequis: 'Diplôme esthétique',
-    certification: true,
+    id: 'zemits-cryo',
+    nom: 'CryoSlim 360',
+    marque: 'Zemits',
+    categorie: 'Minceur',
+    technologie: 'Cryolipolyse',
+    prixMin: 6900,
+    prixMax: 8500,
+    nbTechno: 1,
+    formation: true,
+    sav: '48h',
+    garantie: '2 ans',
+    fabrication: 'EU',
+    scoreROI: 87,
   },
   {
-    id: 'gestion-institut',
-    titre: 'Gestion & Optimisation Institut',
-    description: 'Rentabilisez votre institut : pricing, fidélisation, marketing digital, gestion stocks.',
-    durée: '14h (en ligne + présentiel)',
-    prix: 690,
-    sessions: [
-      { ville: 'En ligne', dates: 'Mai 2026' },
-      { ville: 'Paris', dates: '3 juin 2026' },
-    ],
-    prérequis: 'Chef d’entreprise esthétique',
-    certification: true,
+    id: 'zemits-multi',
+    nom: 'Neo Pro 7 en 1',
+    marque: 'Zemits',
+    categorie: 'Polyvalent',
+    technologie: 'RF + Cavitation + LED + EMS + Cryotherapie + Ultrason + Vide',
+    prixMin: 5200,
+    prixMax: 6800,
+    nbTechno: 7,
+    formation: true,
+    sav: '48h',
+    garantie: '2 ans',
+    fabrication: 'EU',
+    scoreROI: 91,
+    badge: 'Polyvalence maximale',
   },
   {
-    id: 'business-esthetique',
-    titre: 'Business & Marketing Esthétique',
-    description: 'Développez votre CA : Instagram pro, Google Ads, partenariats, upsell machines.',
-    durée: '10h (100% en ligne)',
-    prix: 490,
-    sessions: [
-      { ville: 'En ligne', dates: 'Tous les mois' },
-    ],
-    prérequis: 'Aucun',
-    certification: true,
+    id: 'cesam-jetpeel',
+    nom: 'JetPeel Pro',
+    marque: 'Cesam Esthetic',
+    categorie: 'Visage',
+    technologie: 'JetPeel + LED + Infusion actifs',
+    prixMin: 6500,
+    prixMax: 9000,
+    nbTechno: 3,
+    formation: true,
+    sav: '72h',
+    garantie: '1 an',
+    fabrication: 'Israelien',
+    scoreROI: 80,
   },
   {
-    id: 'cavitation',
-    titre: 'Cavitation Ultrasons',
-    description: 'Maîtrisez la lipocavitation : protocoles minceur, combinaisons RF/vide.',
-    durée: '8h (3h théorie + 5h pratique)',
-    prix: 590,
-    sessions: [
-      { ville: 'Paris', dates: '22-23 avril 2026' },
-      { ville: 'Lyon', dates: '27-28 avril 2026' },
-    ],
-    prérequis: 'Diplôme esthétique',
-    certification: true,
+    id: 'cesam-slim',
+    nom: 'Twin Slim',
+    marque: 'Cesam Esthetic',
+    categorie: 'Corps',
+    technologie: 'Cavitation + Radiofrequence',
+    prixMin: 5800,
+    prixMax: 7500,
+    nbTechno: 2,
+    formation: true,
+    sav: '72h',
+    garantie: '1 an',
+    fabrication: 'Israelien',
+    scoreROI: 75,
+  },
+  {
+    id: 'lpg-cellu',
+    nom: 'Cellu M6 Alliance',
+    marque: 'LPG Systems',
+    categorie: 'Minceur',
+    technologie: 'Endermologie (mecanostimulation)',
+    prixMin: 14000,
+    prixMax: 20000,
+    nbTechno: 1,
+    formation: true,
+    sav: '48h',
+    garantie: '2 ans',
+    fabrication: 'Francais',
+    scoreROI: 78,
+    badge: 'Reference minceur',
+  },
+  {
+    id: 'lpg-lift6',
+    nom: 'Lift 6',
+    marque: 'LPG Systems',
+    categorie: 'Visage',
+    technologie: 'Endermologie visage',
+    prixMin: 8000,
+    prixMax: 12000,
+    nbTechno: 1,
+    formation: true,
+    sav: '48h',
+    garantie: '2 ans',
+    fabrication: 'Francais',
+    scoreROI: 72,
+  },
+  {
+    id: 'europ-hifu',
+    nom: 'HIFU Pro 7D',
+    marque: "Europ'Esthetic",
+    categorie: 'Visage',
+    technologie: 'HIFU 7D multi-profondeurs',
+    prixMin: 4200,
+    prixMax: 6000,
+    nbTechno: 1,
+    formation: false,
+    sav: '5 jours',
+    garantie: '1 an',
+    fabrication: 'Asiatique',
+    scoreROI: 74,
+  },
+  {
+    id: 'europ-cryo',
+    nom: 'Cryo Elite',
+    marque: "Europ'Esthetic",
+    categorie: 'Minceur',
+    technologie: 'Cryolipolyse double applicateurs',
+    prixMin: 7500,
+    prixMax: 10000,
+    nbTechno: 1,
+    formation: false,
+    sav: '5 jours',
+    garantie: '1 an',
+    fabrication: 'Asiatique',
+    scoreROI: 71,
+  },
+  {
+    id: 'isi-multi',
+    nom: 'ISI Multi-Tech 6 en 1',
+    marque: 'ISI Spa',
+    categorie: 'Polyvalent',
+    technologie: 'RF + Cavitation + LED + Vide + EMS + Infrarouge',
+    prixMin: 5500,
+    prixMax: 7000,
+    nbTechno: 6,
+    formation: true,
+    sav: '72h',
+    garantie: '2 ans',
+    fabrication: 'Francais',
+    scoreROI: 83,
   },
 ]
 
-export default function Formations() {
+const categories = ['Toutes', 'Visage', 'Corps', 'Minceur', 'Polyvalent']
+const marques = ['Toutes', 'Zemits', 'Cesam Esthetic', 'LPG Systems', "Europ'Esthetic", 'ISI Spa']
+
+export default function Comparateur() {
+  const [categorieActive, setCategorieActive] = useState('Toutes')
+  const [marqueActive, setMarqueActive] = useState('Toutes')
+  const [sortBy, setSortBy] = useState<'prix' | 'roi' | 'techno'>('roi')
+  const [menuOpen, setMenuOpen] = useState(false)
+
+  const filtered = machines
+    .filter(m => categorieActive === 'Toutes' || m.categorie === categorieActive)
+    .filter(m => marqueActive === 'Toutes' || m.marque === marqueActive)
+    .sort((a, b) => {
+      if (sortBy === 'prix') return a.prixMin - b.prixMin
+      if (sortBy === 'roi') return b.scoreROI - a.scoreROI
+      if (sortBy === 'techno') return b.nbTechno - a.nbTechno
+      return 0
+    })
+
   return (
     <main className="min-h-screen bg-gray-50">
-      {/* NAVBAR */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-100 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-8 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
@@ -112,98 +222,169 @@ export default function Formations() {
           </Link>
           <div className="hidden md:flex items-center gap-8">
             <Link href="/guide" className="text-sm font-medium text-gray-600 hover:text-[#6C47FF] transition">Guide achat</Link>
-            <Link href="/comparateur" className="text-sm font-medium text-gray-600 hover:text-[#6C47FF] transition">Comparateur</Link>
-            <Link href="/formations" className="text-sm font-medium text-[#6C47FF] font-bold">Formations</Link>
+            <Link href="/comparateur" className="text-sm font-medium text-[#6C47FF] font-bold border-b-2 border-[#6C47FF]">Comparateur</Link>
+            <Link href="/formations" className="text-sm font-medium text-gray-600 hover:text-[#6C47FF] transition">Formations</Link>
             <Link href="/contact" className="text-sm font-medium text-gray-600 hover:text-[#6C47FF] transition">Devis</Link>
           </div>
+          <div className="flex items-center gap-3">
+            <Link href="/guide" className="hidden md:inline-flex items-center gap-2 bg-[#6C47FF] text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-[#5835ee] transition shadow-lg shadow-purple-200">
+              Trouver ma machine <span>→</span>
+            </Link>
+            <button onClick={() => setMenuOpen(!menuOpen)} className="md:hidden p-2 rounded-lg hover:bg-gray-100">
+              <div className="w-5 h-0.5 bg-gray-700 mb-1"></div>
+              <div className="w-5 h-0.5 bg-gray-700 mb-1"></div>
+              <div className="w-5 h-0.5 bg-gray-700"></div>
+            </button>
+          </div>
         </div>
+        {menuOpen && (
+          <div className="md:hidden border-t border-gray-100 bg-white px-4 py-4 flex flex-col gap-3">
+            <Link href="/guide" className="text-sm font-medium text-gray-700 py-2">Guide achat</Link>
+            <Link href="/comparateur" className="text-sm font-medium text-[#6C47FF] py-2">Comparateur</Link>
+            <Link href="/formations" className="text-sm font-medium text-gray-700 py-2">Formations</Link>
+            <Link href="/contact" className="text-sm font-medium text-gray-700 py-2">Devis</Link>
+          </div>
+        )}
       </nav>
 
-      <div className="pt-24 pb-20 max-w-6xl mx-auto px-4">
-
-        {/* HEADER */}
-        <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 bg-purple-50 border border-purple-200 text-[#6C47FF] text-xs font-bold px-4 py-2 rounded-full mb-8 uppercase tracking-widest">
-            🎓 Certifications officielles
+      <div className="pt-24 pb-20 max-w-7xl mx-auto px-4">
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center gap-2 bg-purple-50 border border-purple-200 text-[#6C47FF] text-xs font-bold px-4 py-2 rounded-full mb-6 uppercase tracking-widest">
+            ⚖️ Comparateur objectif
           </div>
-          <h1 className="text-4xl sm:text-5xl font-black text-gray-900 mb-6">
-            Nos <span className="text-[#6C47FF]">formations</span> certifiantes
+          <h1 className="text-4xl sm:text-5xl font-black text-gray-900 mb-4">
+            Comparez les machines <span className="text-[#6C47FF]">esthetiques pros</span>
           </h1>
-          <p className="text-gray-500 text-lg max-w-3xl mx-auto leading-relaxed">
-            Formations pratiques et certifiantes pour maîtriser les technologies laser, RF, cryolipolyse et développer votre institut. Éligibles OPCO/FAFCEA.
+          <p className="text-gray-500 text-lg max-w-2xl mx-auto">
+            {machines.length} machines de {marques.length - 1} marques. Filtrez par categorie, marque ou triez par prix / ROI.
           </p>
         </div>
 
-        {/* FORMATIONS CARDS */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
-          {formations.map((f) => (
-            <div key={f.id} className="bg-white rounded-3xl shadow-sm border border-gray-100 hover:shadow-xl transition p-8 group">
-              <div className="flex items-start justify-between mb-6">
-                <div className="w-16 h-16 bg-gradient-to-br from-[#6C47FF] to-[#9B7DFF] rounded-2xl flex items-center justify-center text-white font-black text-xl shadow-lg">
-                  {f.id === 'laser-ipl' ? '🔥' : f.id === 'radiofrequence' ? '📡' : f.id === 'cryolipolyse' ? '🧊' : f.id === 'gestion-institut' ? '📊' : f.id === 'business-esthetique' ? '💼' : '🎯'}
-                </div>
-                {f.certification && (
-                  <span className="bg-green-100 text-green-700 text-xs font-bold px-3 py-1 rounded-full">Certifiante</span>
-                )}
-              </div>
-              <h3 className="text-2xl font-black text-gray-900 mb-3 group-hover:text-[#6C47FF] transition">{f.titre}</h3>
-              <p className="text-gray-600 mb-4 leading-relaxed">{f.description}</p>
-              <div className="space-y-2 mb-6">
-                <div className="flex items-center gap-2 text-sm">
-                  <span className="w-3 h-3 bg-gray-400 rounded-full" />
-                  <span>Durée : {f.durée}</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <span className="w-3 h-3 bg-gray-400 rounded-full" />
-                  <span>Prérequis : {f.prérequis}</span>
-                </div>
-              </div>
-              <div className="border-t border-gray-100 pt-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <span className="text-3xl font-black text-[#6C47FF]">{f.prix.toLocaleString()} €</span>
-                    {f.sessions[0].prixPromo && (
-                      <span className="text-sm text-gray-400 line-through ml-2">{f.sessions[0].prixPromo.toLocaleString()} €</span>
-                    )}
-                  </div>
-                  <Link href="/contact" className="bg-[#6C47FF] text-white px-6 py-2.5 rounded-xl font-bold hover:bg-[#5835ee] transition shadow-lg">
-                    S'inscrire
-                  </Link>
-                </div>
-                <div className="grid grid-cols-2 gap-2 text-xs text-gray-500">
-                  {f.sessions.slice(0, 2).map((s, i) => (
-                    <div key={i} className="bg-gray-50 p-2 rounded-lg">
-                      <div className="font-bold">{s.ville}</div>
-                      <div>{s.dates}</div>
-                    </div>
-                  ))}
-                  {f.sessions.length > 2 && (
-                    <div className="col-span-2 text-center bg-blue-50 border border-blue-200 p-2 rounded-lg text-blue-700 font-bold">
-                      +{f.sessions.length - 2} sessions
-                    </div>
-                  )}
-                </div>
-              </div>
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 mb-8 flex flex-wrap gap-6 items-end">
+          <div>
+            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Categorie</label>
+            <div className="flex gap-2 flex-wrap">
+              {categories.map(c => (
+                <button key={c} onClick={() => setCategorieActive(c)}
+                  className={`px-4 py-2 rounded-xl text-sm font-semibold transition ${
+                    categorieActive === c ? 'bg-[#6C47FF] text-white shadow-md' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}>{c}</button>
+              ))}
             </div>
-          ))}
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Marque</label>
+            <div className="flex gap-2 flex-wrap">
+              {marques.map(m => (
+                <button key={m} onClick={() => setMarqueActive(m)}
+                  className={`px-4 py-2 rounded-xl text-sm font-semibold transition ${
+                    marqueActive === m ? 'bg-gray-900 text-white shadow-md' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}>{m}</button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Trier par</label>
+            <div className="flex gap-2">
+              {[{ key: 'roi', label: '⭐ Score ROI' }, { key: 'prix', label: '💶 Prix croissant' }, { key: 'techno', label: '⚡ Nb techno' }].map(s => (
+                <button key={s.key} onClick={() => setSortBy(s.key as 'prix' | 'roi' | 'techno')}
+                  className={`px-4 py-2 rounded-xl text-sm font-semibold transition ${
+                    sortBy === s.key ? 'bg-[#6C47FF] text-white shadow-md' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}>{s.label}</button>
+              ))}
+            </div>
+          </div>
         </div>
 
-        {/* CTA */}
-        <div className="bg-gradient-to-br from-[#6C47FF] to-[#9B7DFF] rounded-3xl p-12 text-center">
-          <h2 className="text-3xl font-black text-white mb-4">Prêt à vous former ?</h2>
-          <p className="text-purple-200 text-lg mb-8">Contactez-nous pour un devis personnalisé et une prise en charge OPCO/FAFCEA.</p>
-          <Link href="/contact" className="inline-flex items-center gap-2 bg-white text-[#6C47FF] px-10 py-4 rounded-2xl font-black text-lg hover:bg-purple-50 transition shadow-2xl">
-            Demander un devis formation →
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-gray-50 border-b border-gray-100">
+                  <th className="text-left px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wide">Machine</th>
+                  <th className="text-left px-4 py-4 text-xs font-bold text-gray-500 uppercase tracking-wide">Marque</th>
+                  <th className="text-left px-4 py-4 text-xs font-bold text-gray-500 uppercase tracking-wide">Technologie</th>
+                  <th className="text-center px-4 py-4 text-xs font-bold text-gray-500 uppercase tracking-wide">Prix</th>
+                  <th className="text-center px-4 py-4 text-xs font-bold text-gray-500 uppercase tracking-wide">Nb techno</th>
+                  <th className="text-center px-4 py-4 text-xs font-bold text-gray-500 uppercase tracking-wide">Formation</th>
+                  <th className="text-center px-4 py-4 text-xs font-bold text-gray-500 uppercase tracking-wide">SAV</th>
+                  <th className="text-center px-4 py-4 text-xs font-bold text-gray-500 uppercase tracking-wide">Garantie</th>
+                  <th className="text-center px-4 py-4 text-xs font-bold text-gray-500 uppercase tracking-wide">Score ROI</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {filtered.map((m) => (
+                  <tr key={m.id} className={`hover:bg-purple-50/30 transition ${m.marque === 'Zemits' ? 'bg-purple-50/20' : ''}`}>
+                    <td className="px-6 py-5">
+                      <div className="font-bold text-gray-900">{m.nom}</div>
+                      {m.badge && <span className="inline-block mt-1 text-xs bg-[#6C47FF] text-white px-2 py-0.5 rounded-full font-semibold">{m.badge}</span>}
+                      <div className="text-xs text-gray-400 mt-0.5">{m.fabrication}</div>
+                    </td>
+                    <td className="px-4 py-5">
+                      <span className={`text-sm font-semibold ${m.marque === 'Zemits' ? 'text-[#6C47FF]' : 'text-gray-700'}`}>{m.marque}</span>
+                    </td>
+                    <td className="px-4 py-5 text-gray-600 max-w-[180px] text-xs">{m.technologie}</td>
+                    <td className="px-4 py-5 text-center">
+                      <div className="font-bold text-gray-900">{m.prixMin.toLocaleString('fr-FR')} €</div>
+                      <div className="text-xs text-gray-400">a {m.prixMax.toLocaleString('fr-FR')} €</div>
+                    </td>
+                    <td className="px-4 py-5 text-center">
+                      <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-black ${
+                        m.nbTechno >= 3 ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
+                      }`}>{m.nbTechno}</span>
+                    </td>
+                    <td className="px-4 py-5 text-center">
+                      {m.formation ? <span className="text-green-600 font-bold text-xs">✓ Incluse</span> : <span className="text-gray-400 text-xs">En option</span>}
+                    </td>
+                    <td className="px-4 py-5 text-center">
+                      <span className={`font-semibold text-xs ${m.sav === '48h' ? 'text-green-600' : 'text-gray-500'}`}>{m.sav}</span>
+                    </td>
+                    <td className="px-4 py-5 text-center">
+                      <span className={`font-semibold text-xs ${m.garantie === '2 ans' ? 'text-green-600' : 'text-gray-500'}`}>{m.garantie}</span>
+                    </td>
+                    <td className="px-4 py-5 text-center">
+                      <div className="flex flex-col items-center gap-1">
+                        <span className={`text-lg font-black ${
+                          m.scoreROI >= 85 ? 'text-[#6C47FF]' : m.scoreROI >= 75 ? 'text-amber-500' : 'text-gray-400'
+                        }`}>{m.scoreROI}</span>
+                        <div className="w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                          <div className={`h-full rounded-full ${
+                            m.scoreROI >= 85 ? 'bg-[#6C47FF]' : m.scoreROI >= 75 ? 'bg-amber-400' : 'bg-gray-300'
+                          }`} style={{ width: `${m.scoreROI}%` }} />
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {filtered.length === 0 && (
+            <div className="text-center py-16 text-gray-400">
+              <div className="text-4xl mb-4">🔍</div>
+              <p className="font-semibold">Aucune machine ne correspond a ces filtres.</p>
+            </div>
+          )}
+        </div>
+
+        <div className="mt-6 bg-gray-50 border border-gray-200 rounded-xl p-5 text-xs text-gray-500">
+          <p className="font-bold text-gray-700 mb-1">📊 Methodologie du Score ROI</p>
+          <p>Le score ROI est calcule sur la base du prix d achat, du nombre de technologies, du delai SAV, de la formation incluse et de la garantie. Il represente le potentiel de rentabilite estime pour un institut esthetique moyen en France.</p>
+        </div>
+
+        <div className="mt-10 bg-gradient-to-br from-[#6C47FF] to-[#9B7DFF] rounded-3xl p-10 text-center">
+          <h2 className="text-2xl font-black text-white mb-3">Besoin d un devis personnalise ?</h2>
+          <p className="text-purple-200 mb-6">Notre equipe vous accompagne dans le choix et vous envoie une offre sous 24h.</p>
+          <Link href="/contact" className="inline-flex items-center gap-2 bg-white text-[#6C47FF] px-8 py-4 rounded-2xl font-black hover:bg-purple-50 transition shadow-xl">
+            Demander un devis gratuit →
           </Link>
         </div>
-
       </div>
 
-      {/* FOOTER */}
       <footer className="bg-gray-900 text-gray-400 py-12 px-8">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
           <span className="text-white font-black text-lg">Estheti<span className="text-[#9B7DFF]">Scan</span></span>
-          <p className="text-xs">© 2026 EsthetiScan — Formations certifiantes pour professionnels de l’esthétique</p>
+          <p className="text-xs">© 2026 EsthetiScan — Comparateur independant de machines esthetiques professionnelles</p>
         </div>
       </footer>
     </main>
