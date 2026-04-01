@@ -1,197 +1,243 @@
-'use client'
-import { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase'
-import type { Machine } from '@/lib/supabase'
-import Link from 'next/link'
-import { CheckCircle, XCircle, Star, ExternalLink, ArrowLeft } from 'lucide-react'
+"use client"
+import { useEffect, useState, Suspense } from "react"
+import { useSearchParams } from "next/navigation"
+import { supabase } from "@/lib/supabase"
+import Link from "next/link"
+
+type Machine = {
+  id: number
+  nom: string
+  marque_id: number
+  categorie_id: number
+  technologies: string
+  puissance_w: number
+  dimensions: string
+  poids_kg: number
+  garantie_annees: number
+  prix_eur: number
+  est_zemits: boolean
+  points_forts: string
+  lien_achat: string
+  certifications: string
+  nb_fonctions: number
+}
+
+type Marque = { id: number; nom: string }
+type Categorie = { id: number; nom: string }
 
 const CATEGORIES = [
-  { slug: 'all', label: 'Toutes' },
-  { slug: 'hydrodermabrasion', label: 'Hydrodermabrasion' },
-  { slug: 'cryotherapie', label: 'Cryothérapie' },
-  { slug: 'radiofrequence', label: 'Radiofréquence' },
-  { slug: 'cavitation', label: 'Cavitation & Corps' },
-  { slug: 'haute-frequence', label: 'Haute Fréquence' },
-  { slug: 'oxygene', label: 'Oxygène' },
+  "Hydrodermabrasion",
+  "Cryothérapie", 
+  "Cavitation",
+  "Haute fréquence",
+  "Multiplex / Combo",
 ]
 
-export default function Comparateur() {
+function ComparateurContent() {
+  const searchParams = useSearchParams()
   const [machines, setMachines] = useState<Machine[]>([])
-  const [selected, setSelected] = useState<number[]>([])
-  const [categorie, setCategorie] = useState('all')
+  const [marques, setMarques] = useState<Record<number, string>>({})
+  const [categories, setCategories] = useState<Record<number, string>>({})
+  const [categorieActive, setCategorieActive] = useState<string>(
+    searchParams.get("categorie") || "Hydrodermabrasion"
+  )
+  const [selection, setSelection] = useState<number[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    async function loadRefs() {
+      const { data: m } = await supabase.from("marques").select("id, nom")
+      const { data: c } = await supabase.from("categories").select("id, nom")
+      if (m) setMarques(Object.fromEntries(m.map((x: Marque) => [x.id, x.nom])))
+      if (c) setCategories(Object.fromEntries(c.map((x: Categorie) => [x.id, x.nom])))
+    }
+    loadRefs()
+  }, [])
+
+  useEffect(() => {
     async function fetchMachines() {
-      let query = supabase.from('machines').select('*').order('est_zemits', { ascending: false })
-      if (categorie !== 'all') query = query.eq('categorie', categorie)
-      const { data } = await query
-      setMachines(data || [])
+      setLoading(true)
+      setSelection([])
+      const { data: cats } = await supabase.from("categories").select("id").ilike("nom", `%${categorieActive}%`)
+      if (!cats || cats.length === 0) { setMachines([]); setLoading(false); return }
+      const catId = cats[0].id
+      const { data } = await supabase
+        .from("machines")
+        .select("*")
+        .eq("categorie_id", catId)
+        .order("est_zemits", { ascending: false })
+      if (data) setMachines(data)
       setLoading(false)
     }
-    fetchMachines()
-  }, [categorie])
+    if (Object.keys(categories).length > 0 || true) fetchMachines()
+  }, [categorieActive, categories])
 
-  const toggleSelect = (id: number) => {
-    setSelected(prev =>
-      prev.includes(id) ? prev.filter(x => x !== id) : prev.length < 4 ? [...prev, id] : prev
+  function toggleSelection(id: number) {
+    setSelection((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : prev.length < 4 ? [...prev, id] : prev
     )
   }
 
-  const selectedMachines = machines.filter(m => selected.includes(m.id))
+  const machinesComparees = selection.length > 0
+    ? machines.filter((m) => selection.includes(m.id))
+    : machines.slice(0, 4)
+
+  const specs = [
+    { label: "Technologies", key: "technologies" },
+    { label: "Puissance", key: "puissance_w", format: (v: number) => v ? `${v}W` : "—" },
+    { label: "Nb fonctions", key: "nb_fonctions", format: (v: number) => v ? `${v} fonctions` : "—" },
+    { label: "Dimensions", key: "dimensions" },
+    { label: "Poids", key: "poids_kg", format: (v: number) => v ? `${v} kg` : "—" },
+    { label: "Garantie", key: "garantie_annees", format: (v: number) => v ? `${v} an${v > 1 ? "s" : ""}` : "—" },
+    { label: "Certifications", key: "certifications" },
+    { label: "Prix indicatif", key: "prix_eur", format: (v: number) => v ? `${v.toLocaleString("fr-FR")} €` : "Sur devis" },
+    { label: "Points forts", key: "points_forts" },
+  ]
 
   return (
-    <main className="min-h-screen bg-[#f8f6f0]">
-      {/* Header */}
-      <header className="bg-[#1a1a2e] text-white py-4 px-6 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Link href="/" className="text-gray-400 hover:text-white flex items-center gap-1 text-sm">
-            <ArrowLeft size={16} /> Accueil
-          </Link>
-          <span className="text-xl font-bold text-[#C9A84C]">ZEMITS</span>
-        </div>
-        <a href="https://zemits.store" target="_blank" rel="noopener noreferrer"
-          className="bg-[#C9A84C] text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-[#b8943d] transition">
-          Catalogue Zemits →
-        </a>
+    <main className="min-h-screen bg-[#f8f4ef]">
+      <header className="bg-[#1a1a2e] text-white py-4 px-8 flex justify-between items-center shadow">
+        <Link href="/" className="text-2xl font-bold text-[#C9A84C]">ZEMITS</Link>
+        <Link href="/contact"
+          className="bg-[#C9A84C] text-[#1a1a2e] px-4 py-2 rounded font-semibold text-sm hover:bg-yellow-400 transition">
+          Demander un devis
+        </Link>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold text-[#1a1a2e] mb-2">Comparateur de machines</h1>
-        <p className="text-gray-500 mb-6">Sélectionnez jusqu'à 4 machines pour les comparer côte à côte</p>
+      <div className="max-w-7xl mx-auto px-4 py-10">
+        <h1 className="text-3xl font-bold text-[#1a1a2e] mb-1">Comparateur de machines esthétiques</h1>
+        <p className="text-gray-500 mb-8">Sélectionnez jusqu'à 4 machines pour comparer leurs caractéristiques</p>
 
-        {/* Filtres catégorie */}
-        <div className="flex flex-wrap gap-2 mb-8">
-          {CATEGORIES.map(cat => (
-            <button key={cat.slug} onClick={() => { setCategorie(cat.slug); setSelected([]) }}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition ${
-                categorie === cat.slug
-                  ? 'bg-[#C9A84C] text-white'
-                  : 'bg-white border border-gray-200 text-gray-600 hover:border-[#C9A84C]'
+        {/* FILTRES CATEGORIES */}
+        <div className="flex gap-3 flex-wrap mb-10">
+          {CATEGORIES.map((cat) => (
+            <button key={cat} onClick={() => setCategorieActive(cat)}
+              className={`px-5 py-2 rounded-full text-sm font-semibold transition border-2 ${
+                categorieActive === cat
+                  ? "bg-[#C9A84C] text-[#1a1a2e] border-[#C9A84C]"
+                  : "bg-white text-gray-600 border-gray-200 hover:border-[#C9A84C]"
               }`}>
-              {cat.label}
+              {cat}
             </button>
           ))}
         </div>
 
-        {/* Tableau comparatif */}
-        {selectedMachines.length >= 2 && (
-          <div className="mb-10 overflow-x-auto">
-            <h2 className="text-xl font-bold text-[#1a1a2e] mb-4">Tableau comparatif</h2>
-            <table className="w-full bg-white rounded-xl shadow-md overflow-hidden">
-              <thead>
-                <tr className="bg-[#1a1a2e] text-white">
-                  <th className="text-left p-4 w-48">Critère</th>
-                  {selectedMachines.map(m => (
-                    <th key={m.id} className={`p-4 text-center ${m.est_zemits ? 'bg-[#C9A84C]!' : ''}`}>
-                      <div className={`rounded-lg p-2 ${m.est_zemits ? 'bg-[#C9A84C]/20 border border-[#C9A84C]!' : ''}`}>
-                        {m.est_zemits && <span className="text-[#C9A84C] text-xs font-bold block">⭐ ZEMITS</span>}
-                        <span className="font-bold">{m.nom}</span>
-                        <span className="block text-xs text-gray-300">{m.marque}</span>
-                      </div>
-                    </th>
+        {loading ? (
+          <div className="text-center py-20 text-gray-400 text-lg">Chargement des machines...</div>
+        ) : machines.length === 0 ? (
+          <div className="text-center py-20 text-gray-400">Aucune machine trouvée pour cette catégorie.</div>
+        ) : (
+          <>
+            {/* CARDS */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+              {machines.map((m) => (
+                <div key={m.id} onClick={() => toggleSelection(m.id)}
+                  className={`cursor-pointer rounded-2xl p-4 border-2 transition select-none ${
+                    m.est_zemits ? "border-[#C9A84C] bg-yellow-50" : "border-gray-200 bg-white hover:border-gray-300"
+                  } ${selection.includes(m.id) ? "ring-4 ring-[#C9A84C] ring-opacity-50" : ""}`}>
+                  {m.est_zemits && (
+                    <span className="text-xs bg-[#C9A84C] text-[#1a1a2e] px-2 py-0.5 rounded-full font-bold mb-2 inline-block">
+                      ★ ZEMITS
+                    </span>
+                  )}
+                  <h3 className="font-bold text-sm text-[#1a1a2e] leading-tight">{m.nom}</h3>
+                  <p className="text-xs text-gray-400 mt-0.5">{marques[m.marque_id] || ""}</p>
+                  <p className="text-[#C9A84C] font-bold mt-2 text-sm">
+                    {m.prix_eur ? `${m.prix_eur.toLocaleString("fr-FR")} €` : "Sur devis"}
+                  </p>
+                  <div className={`mt-3 w-5 h-5 rounded border-2 mx-auto flex items-center justify-center ${
+                    selection.includes(m.id) ? "bg-[#C9A84C] border-[#C9A84C]" : "border-gray-300"
+                  }`}>
+                    {selection.includes(m.id) && <span className="text-white text-xs font-bold">✓</span>}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* SELECTION INFO */}
+            {selection.length > 0 && (
+              <div className="flex gap-2 mb-4 flex-wrap items-center">
+                <span className="text-sm text-gray-500">Comparaison :</span>
+                {machines.filter(m => selection.includes(m.id)).map(m => (
+                  <span key={m.id} className="bg-[#1a1a2e] text-white text-xs px-3 py-1 rounded-full flex items-center gap-2">
+                    {m.nom}
+                    <button onClick={(e) => { e.stopPropagation(); toggleSelection(m.id) }} className="hover:text-red-400">✕</button>
+                  </span>
+                ))}
+                <button onClick={() => setSelection([])} className="text-xs text-red-400 underline ml-2">Tout effacer</button>
+              </div>
+            )}
+
+            {/* TABLEAU COMPARATIF */}
+            <div className="overflow-x-auto rounded-2xl shadow-xl">
+              <table className="w-full border-collapse bg-white">
+                <thead>
+                  <tr>
+                    <th className="bg-[#1a1a2e] text-white p-4 text-left text-sm w-44 sticky left-0">Critère</th>
+                    {machinesComparees.map((m) => (
+                      <th key={m.id} className={`p-4 text-center min-w-[180px] ${
+                        m.est_zemits ? "bg-[#C9A84C] text-[#1a1a2e]" : "bg-gray-100 text-gray-700"
+                      }`}>
+                        {m.est_zemits && <div className="text-xs font-black mb-1 uppercase tracking-wider">★ Recommandé</div>}
+                        <div className="font-bold text-sm">{m.nom}</div>
+                        <div className="text-xs opacity-60 mt-0.5">{marques[m.marque_id] || ""}</div>
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {specs.map((spec, i) => (
+                    <tr key={spec.key} className={i % 2 === 0 ? "bg-gray-50" : "bg-white"}>
+                      <td className="p-4 font-semibold text-xs text-gray-500 uppercase tracking-wide border-r border-gray-100 sticky left-0 bg-inherit">
+                        {spec.label}
+                      </td>
+                      {machinesComparees.map((m) => {
+                        const raw = (m as Record<string, unknown>)[spec.key]
+                        const val = spec.format ? spec.format(raw as number) : (raw as string) || "—"
+                        return (
+                          <td key={m.id} className={`p-4 text-center text-sm border-r border-gray-50 ${
+                            m.est_zemits ? "font-semibold text-[#1a1a2e]" : "text-gray-600"
+                          }`}>
+                            {val}
+                          </td>
+                        )
+                      })}
+                    </tr>
                   ))}
-                </tr>
-              </thead>
-              <tbody>
-                {[
-                  { label: 'Prix indicatif', key: 'prix', format: (v: any) => v ? `${v.toLocaleString()}€` : 'Sur devis' },
-                  { label: 'Technologie', key: 'technologie', format: (v: any) => v },
-                  { label: 'Puissance (W)', key: 'puissance_w', format: (v: any) => v ? `${v}W` : '-' },
-                  { label: 'Nombre de têtes', key: 'nb_tetes', format: (v: any) => v || '-' },
-                  { label: 'Certifications', key: 'certifications', format: (v: any) => v },
-                  { label: 'Garantie', key: 'garantie', format: (v: any) => v },
-                  { label: 'Formation incluse', key: 'formation_incluse', format: (v: any) => v ? '✅' : '❌' },
-                  { label: 'SAV France', key: 'sav_france', format: (v: any) => v ? '✅' : '❌' },
-                  { label: 'Note', key: 'note', format: (v: any) => '⭐'.repeat(Math.round(v)) + ` (${v}/5)` },
-                ].map((row, i) => (
-                  <tr key={row.key} className={i % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
-                    <td className="p-4 font-medium text-gray-700 text-sm">{row.label}</td>
-                    {selectedMachines.map(m => (
-                      <td key={m.id} className={`p-4 text-center text-sm ${m.est_zemits ? 'font-semibold text-[#1a1a2e]' : 'text-gray-600'}`}>
-                        {row.format((m as any)[row.key])}
+                  <tr className="bg-[#1a1a2e]">
+                    <td className="p-4 text-white font-bold text-sm sticky left-0 bg-[#1a1a2e]">Action</td>
+                    {machinesComparees.map((m) => (
+                      <td key={m.id} className="p-4 text-center">
+                        {m.est_zemits ? (
+                          <Link href="/contact"
+                            className="bg-[#C9A84C] text-[#1a1a2e] px-4 py-2 rounded-lg font-bold text-sm hover:bg-yellow-400 transition inline-block">
+                            Obtenir un devis →
+                          </Link>
+                        ) : m.lien_achat ? (
+                          <a href={m.lien_achat} target="_blank" rel="noopener noreferrer"
+                            className="text-gray-400 text-xs underline hover:text-white transition">
+                            Voir produit ↗
+                          </a>
+                        ) : (
+                          <span className="text-gray-600 text-xs">—</span>
+                        )}
                       </td>
                     ))}
                   </tr>
-                ))}
-                <tr className="bg-[#C9A84C]/5 border-t-2 border-[#C9A84C]">
-                  <td className="p-4 font-bold text-[#1a1a2e]">Action</td>
-                  {selectedMachines.map(m => (
-                    <td key={m.id} className="p-4 text-center">
-                      {m.est_zemits ? (
-                        <a href={m.url_produit} target="_blank" rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 bg-[#C9A84C] text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-[#b8943d] transition">
-                          Commander <ExternalLink size={14} />
-                        </a>
-                      ) : (
-                        <span className="text-xs text-gray-400">Concurrent</span>
-                      )}
-                    </td>
-                  ))}
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {/* Grille machines */}
-        {loading ? (
-          <div className="text-center py-20 text-gray-400">Chargement des machines...</div>
-        ) : (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-            {machines.map(machine => {
-              const isSelected = selected.includes(machine.id)
-              return (
-                <div key={machine.id}
-                  className={`bg-white rounded-xl shadow-sm border-2 transition cursor-pointer card-hover overflow-hidden ${
-                    isSelected ? 'border-[#C9A84C] shadow-[#C9A84C]/20 shadow-lg' :
-                    machine.est_zemits ? 'border-[#C9A84C]/30' : 'border-gray-100'
-                  }`}
-                  onClick={() => toggleSelect(machine.id)}>
-                  {machine.est_zemits && (
-                    <div className="bg-[#C9A84C] text-white text-xs font-bold px-3 py-1 text-center">
-                      ⭐ ZEMITS — Notre sélection
-                    </div>
-                  )}
-                  <div className="p-5">
-                    <div className="flex justify-between items-start mb-3">
-                      <div>
-                        <p className="text-xs text-gray-400 uppercase tracking-wide">{machine.marque}</p>
-                        <h3 className="font-bold text-[#1a1a2e] text-sm leading-tight">{machine.nom}</h3>
-                      </div>
-                      {isSelected && <CheckCircle className="text-[#C9A84C] shrink-0" size={20} />}
-                    </div>
-                    <p className="text-xs text-gray-500 mb-3 line-clamp-2">{machine.description}</p>
-                    <div className="flex flex-wrap gap-1 mb-3">
-                      <span className="bg-gray-100 text-gray-600 text-xs px-2 py-0.5 rounded">{machine.technologie}</span>
-                      <span className="bg-gray-100 text-gray-600 text-xs px-2 py-0.5 rounded">{machine.certifications}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="font-bold text-[#C9A84C]">
-                        {machine.prix ? `${machine.prix.toLocaleString()}€` : 'Sur devis'}
-                      </span>
-                      <span className="text-xs text-gray-400">{'⭐'.repeat(Math.round(machine.note))}</span>
-                    </div>
-                    {machine.est_zemits && (
-                      <a href={machine.url_produit} target="_blank" rel="noopener noreferrer"
-                        onClick={e => e.stopPropagation()}
-                        className="mt-3 w-full block text-center bg-[#1a1a2e] text-white text-xs py-2 rounded-lg hover:bg-[#C9A84C] transition">
-                        Voir sur zemits.store →
-                      </a>
-                    )}
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        )}
-
-        {selected.length > 0 && selected.length < 2 && (
-          <div className="fixed bottom-6 right-6 bg-[#1a1a2e] text-white px-6 py-3 rounded-xl shadow-xl text-sm">
-            Sélectionnez au moins 2 machines pour comparer ({selected.length}/4)
-          </div>
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
     </main>
+  )
+}
+
+export default function Comparateur() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Chargement...</div>}>
+      <ComparateurContent />
+    </Suspense>
   )
 }
