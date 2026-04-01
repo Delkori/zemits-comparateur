@@ -8,199 +8,220 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ""
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
 const supabase = createClient(supabaseUrl, supabaseKey)
 
-const CATEGORIES = ["Hydrodermabrasion", "Cryotherapie", "Cavitation", "Haute frequence", "Multiplex"]
-const CATEGORIES_LABELS = {
-  "Hydrodermabrasion": "Hydrodermabrasion",
-  "Cryotherapie": "Cryotherapie",
-  "Cavitation": "Cavitation",
-  "Haute frequence": "Haute Frequence",
-  "Multiplex": "Multiplex / Combo"
+type Machine = {
+  id: number
+  nom: string
+  technologie: string
+  prix_ht: number
+  garantie_annees: number
+  poids_kg: number
+  puissance_w: number
+  certifications: string
+  support_fr: boolean
+  description?: string
+  slug?: string
 }
 
-function ComparateurContent() {
-  const searchParams = useSearchParams()
-  const [machines, setMachines] = useState([])
-  const [marques, setMarques] = useState({})
-  const [categorieActive, setCategorieActive] = useState(searchParams.get("categorie") || "Hydrodermabrasion")
-  const [selection, setSelection] = useState([])
+function ComparateurInner() {
+  const [machines, setMachines] = useState<Machine[]>([])
+  const [selected, setSelected] = useState<number[]>([])
   const [loading, setLoading] = useState(true)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const params = useSearchParams()
 
-  useEffect(function() {
-    async function loadMarques() {
-      const res = await supabase.from("marques").select("id, nom")
-      if (res.data) {
-        const map = {}
-        res.data.forEach(function(m) { map[m.id] = m.nom })
-        setMarques(map)
-      }
-    }
-    loadMarques()
-  }, [])
-
-  useEffect(function() {
-    async function fetchMachines() {
-      setLoading(true)
-      setSelection([])
-      const catRes = await supabase.from("categories").select("id, nom")
-      if (!catRes.data) { setMachines([]); setLoading(false); return }
-      const cat = catRes.data.find(function(c) { return c.nom.toLowerCase().includes(categorieActive.toLowerCase()) })
-      if (!cat) { setMachines([]); setLoading(false); return }
-      const res = await supabase.from("machines").select("*").eq("categorie_id", cat.id).order("est_zemits", { ascending: false })
-      if (res.data) setMachines(res.data)
+  useEffect(() => {
+    supabase.from("machines").select("*").then(({ data }) => {
+      if (data) setMachines(data as Machine[])
       setLoading(false)
-    }
-    fetchMachines()
-  }, [categorieActive])
-
-  function toggleSelection(id) {
-    setSelection(function(prev) {
-      if (prev.includes(id)) return prev.filter(function(x) { return x !== id })
-      if (prev.length >= 4) return prev
-      return [...prev, id]
     })
+    const ids = params.get("ids")
+    if (ids) setSelected(ids.split(",").map(Number))
+  }, [params])
+
+  const toggle = (id: number) => {
+    setSelected(prev =>
+      prev.includes(id) ? prev.filter(x => x !== id) : prev.length < 4 ? [...prev, id] : prev
+    )
   }
 
-  const machinesComparees = selection.length > 0
-    ? machines.filter(function(m) { return selection.includes(m.id) })
-    : machines.slice(0, 4)
-
-  const specs = [
-    { label: "Technologies", key: "technologies" },
-    { label: "Puissance", key: "puissance_w", fmt: function(v) { return v ? v + "W" : "-" } },
-    { label: "Nb fonctions", key: "nb_fonctions", fmt: function(v) { return v ? v + " fonctions" : "-" } },
-    { label: "Dimensions", key: "dimensions" },
-    { label: "Poids", key: "poids_kg", fmt: function(v) { return v ? v + " kg" : "-" } },
-    { label: "Garantie", key: "garantie_annees", fmt: function(v) { return v ? v + " an(s)" : "-" } },
-    { label: "Certifications", key: "certifications" },
-    { label: "Prix indicatif", key: "prix_eur", fmt: function(v) { return v ? v.toLocaleString("fr-FR") + " EUR" : "Sur devis" } },
-    { label: "Points forts", key: "points_forts" },
-  ]
+  const sel = machines.filter(m => selected.includes(m.id))
 
   return (
-    <main className="min-h-screen bg-[#f8f4ef]">
-      <header className="bg-[#1a1a2e] text-white py-4 px-8 flex justify-between items-center shadow">
-        <Link href="/" className="text-2xl font-bold text-[#C9A84C]">ZEMITS</Link>
-        <Link href="/contact" className="bg-[#C9A84C] text-[#1a1a2e] px-4 py-2 rounded font-semibold text-sm hover:bg-yellow-400 transition">
-          Demander un devis
-        </Link>
-      </header>
-
-      <div className="max-w-7xl mx-auto px-4 py-10">
-        <h1 className="text-3xl font-bold text-[#1a1a2e] mb-1">Comparateur de machines esthetiques</h1>
-        <p className="text-gray-500 mb-8">Selectionnez jusqu-a 4 machines pour comparer leurs caracteristiques</p>
-
-        <div className="flex gap-3 flex-wrap mb-10">
-          {CATEGORIES.map(function(cat) {
-            return (
-              <button key={cat} onClick={function() { setCategorieActive(cat) }}
-                className={"px-5 py-2 rounded-full text-sm font-semibold transition border-2 " + (categorieActive === cat ? "bg-[#C9A84C] text-[#1a1a2e] border-[#C9A84C]" : "bg-white text-gray-600 border-gray-200 hover:border-[#C9A84C]")}>
-                {CATEGORIES_LABELS[cat]}
-              </button>
-            )
-          })}
+    <main className="min-h-screen bg-white font-sans flex flex-col">
+      {/* NAVBAR */}
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-100 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-8 h-16 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-gradient-to-br from-[#6C47FF] to-[#9B7DFF] rounded-lg flex items-center justify-center">
+              <span className="text-white text-sm font-black">E</span>
+            </div>
+            <span className="text-xl font-black text-gray-900">Estheti<span className="text-[#6C47FF]">Scan</span></span>
+          </Link>
+          <div className="hidden md:flex items-center gap-8">
+            <Link href="/guide" className="text-sm font-medium text-gray-600 hover:text-[#6C47FF] transition">Guide achat</Link>
+            <Link href="/comparateur" className="text-sm font-medium text-[#6C47FF] border-b-2 border-[#6C47FF] pb-0.5">Comparateur</Link>
+            <Link href="/contact" className="text-sm font-medium text-gray-600 hover:text-[#6C47FF] transition">Devis</Link>
+          </div>
+          <div className="flex items-center gap-3">
+            <Link href="/guide" className="hidden md:inline-flex items-center gap-2 bg-[#6C47FF] text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-[#5835ee] transition shadow-lg shadow-purple-200">
+              Trouver ma machine <span>→</span>
+            </Link>
+            <button onClick={() => setMenuOpen(!menuOpen)} className="md:hidden p-2 rounded-lg hover:bg-gray-100">
+              <div className="w-5 h-0.5 bg-gray-700 mb-1"></div>
+              <div className="w-5 h-0.5 bg-gray-700 mb-1"></div>
+              <div className="w-5 h-0.5 bg-gray-700"></div>
+            </button>
+          </div>
         </div>
-
-        {loading ? (
-          <div className="text-center py-20 text-gray-400 text-lg">Chargement des machines...</div>
-        ) : machines.length === 0 ? (
-          <div className="text-center py-20 text-gray-400">Aucune machine trouvee pour cette categorie.</div>
-        ) : (
-          <div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
-              {machines.map(function(m) {
-                return (
-                  <div key={m.id} onClick={function() { toggleSelection(m.id) }}
-                    className={"cursor-pointer rounded-2xl p-4 border-2 transition select-none " + (m.est_zemits ? "border-[#C9A84C] bg-yellow-50 " : "border-gray-200 bg-white ") + (selection.includes(m.id) ? "ring-4 ring-[#C9A84C] ring-opacity-50" : "")}>
-                    {m.est_zemits && <span className="text-xs bg-[#C9A84C] text-[#1a1a2e] px-2 py-0.5 rounded-full font-bold mb-2 inline-block">ZEMITS</span>}
-                    <h3 className="font-bold text-sm text-[#1a1a2e] leading-tight">{m.nom}</h3>
-                    <p className="text-xs text-gray-400 mt-0.5">{marques[m.marque_id] || ""}</p>
-                    <p className="text-[#C9A84C] font-bold mt-2 text-sm">{m.prix_eur ? m.prix_eur.toLocaleString("fr-FR") + " EUR" : "Sur devis"}</p>
-                    <div className={"mt-3 w-5 h-5 rounded border-2 mx-auto flex items-center justify-center " + (selection.includes(m.id) ? "bg-[#C9A84C] border-[#C9A84C]" : "border-gray-300")}>
-                      {selection.includes(m.id) && <span className="text-white text-xs font-bold">ok</span>}
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-
-            {selection.length > 0 && (
-              <div className="flex gap-2 mb-4 flex-wrap items-center">
-                <span className="text-sm text-gray-500">Comparaison :</span>
-                {machines.filter(function(m) { return selection.includes(m.id) }).map(function(m) {
-                  return (
-                    <span key={m.id} className="bg-[#1a1a2e] text-white text-xs px-3 py-1 rounded-full flex items-center gap-2">
-                      {m.nom}
-                      <button onClick={function(e) { e.stopPropagation(); toggleSelection(m.id) }} className="hover:text-red-400">x</button>
-                    </span>
-                  )
-                })}
-                <button onClick={function() { setSelection([]) }} className="text-xs text-red-400 underline ml-2">Tout effacer</button>
-              </div>
-            )}
-
-            <div className="overflow-x-auto rounded-2xl shadow-xl">
-              <table className="w-full border-collapse bg-white">
-                <thead>
-                  <tr>
-                    <th className="bg-[#1a1a2e] text-white p-4 text-left text-sm w-44">Critere</th>
-                    {machinesComparees.map(function(m) {
-                      return (
-                        <th key={m.id} className={"p-4 text-center min-w-44 " + (m.est_zemits ? "bg-[#C9A84C] text-[#1a1a2e]" : "bg-gray-100 text-gray-700")}>
-                          {m.est_zemits && <div className="text-xs font-black mb-1 uppercase">Recommande</div>}
-                          <div className="font-bold text-sm">{m.nom}</div>
-                          <div className="text-xs opacity-60 mt-0.5">{marques[m.marque_id] || ""}</div>
-                        </th>
-                      )
-                    })}
-                  </tr>
-                </thead>
-                <tbody>
-                  {specs.map(function(spec, i) {
-                    return (
-                      <tr key={spec.key} className={i % 2 === 0 ? "bg-gray-50" : "bg-white"}>
-                        <td className="p-4 font-semibold text-xs text-gray-500 uppercase border-r border-gray-100">{spec.label}</td>
-                        {machinesComparees.map(function(m) {
-                          const raw = m[spec.key]
-                          const val = spec.fmt ? spec.fmt(raw) : (raw || "-")
-                          return (
-                            <td key={m.id} className={"p-4 text-center text-sm border-r border-gray-50 " + (m.est_zemits ? "font-semibold text-[#1a1a2e]" : "text-gray-600")}>
-                              {val}
-                            </td>
-                          )
-                        })}
-                      </tr>
-                    )
-                  })}
-                  <tr className="bg-[#1a1a2e]">
-                    <td className="p-4 text-white font-bold text-sm">Action</td>
-                    {machinesComparees.map(function(m) {
-                      return (
-                        <td key={m.id} className="p-4 text-center">
-                          {m.est_zemits ? (
-                            <Link href="/contact" className="bg-[#C9A84C] text-[#1a1a2e] px-4 py-2 rounded-lg font-bold text-sm hover:bg-yellow-400 transition inline-block">
-                              Obtenir un devis
-                            </Link>
-                          ) : m.lien_achat ? (
-                            <a href={m.lien_achat} target="_blank" rel="noopener noreferrer" className="text-gray-400 text-xs underline hover:text-white">Voir produit</a>
-                          ) : <span className="text-gray-600 text-xs">-</span>}
-                        </td>
-                      )
-                    })}
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+        {menuOpen && (
+          <div className="md:hidden border-t border-gray-100 bg-white px-4 py-4 flex flex-col gap-3">
+            <Link href="/guide" className="text-sm font-medium text-gray-700 py-2">Guide achat</Link>
+            <Link href="/comparateur" className="text-sm font-medium text-[#6C47FF] py-2">Comparateur</Link>
+            <Link href="/contact" className="text-sm font-medium text-gray-700 py-2">Devis</Link>
+            <Link href="/guide" className="bg-[#6C47FF] text-white px-5 py-3 rounded-xl text-sm font-bold text-center">Trouver ma machine</Link>
           </div>
         )}
-      </div>
+      </nav>
+
+      {/* HERO */}
+      <section className="pt-28 pb-10 px-4 bg-gradient-to-br from-[#f5f3ff] via-white to-[#faf5ff]">
+        <div className="max-w-4xl mx-auto text-center">
+          <div className="inline-flex items-center gap-2 bg-purple-50 border border-purple-200 text-[#6C47FF] text-xs font-bold px-4 py-2 rounded-full mb-6 uppercase tracking-widest">
+            <span className="w-2 h-2 bg-[#6C47FF] rounded-full inline-block"></span>
+            Comparateur expert
+          </div>
+          <h1 className="text-4xl sm:text-5xl font-black text-gray-900 leading-tight mb-4">
+            Comparez les machines<br />
+            <span className="text-[#6C47FF]">cote a cote</span>
+          </h1>
+          <p className="text-lg text-gray-500 max-w-2xl mx-auto">
+            Selectionnez jusqu'a 4 machines et comparez-les sur tous les criteres techniques.
+          </p>
+        </div>
+      </section>
+
+      {/* CONTENU */}
+      <section className="flex-1 py-10 px-4">
+        <div className="max-w-7xl mx-auto">
+          {loading ? (
+            <div className="flex items-center justify-center py-24 gap-3">
+              <div className="w-6 h-6 border-3 border-[#6C47FF] border-t-transparent rounded-full animate-spin"></div>
+              <span className="text-gray-500">Chargement des machines...</span>
+            </div>
+          ) : (
+            <>
+              {/* SELECTION */}
+              <div className="mb-10">
+                <h2 className="text-xl font-bold text-gray-900 mb-6">
+                  Choisissez vos machines{" "}
+                  <span className="text-sm font-normal text-gray-400">({selected.length}/4 selectionnees)</span>
+                </h2>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                  {machines.map(m => (
+                    <button
+                      key={m.id}
+                      onClick={() => toggle(m.id)}
+                      className={`p-4 rounded-2xl border-2 text-left transition-all ${
+                        selected.includes(m.id)
+                          ? "border-[#6C47FF] bg-purple-50 shadow-lg shadow-purple-100"
+                          : "border-gray-200 bg-white hover:border-purple-300"
+                      }`}
+                    >
+                      <div className="flex items-start justify-between mb-2">
+                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                          selected.includes(m.id) ? "bg-[#6C47FF] border-[#6C47FF]" : "border-gray-300"
+                        }`}>
+                          {selected.includes(m.id) && <span className="text-white text-xs">✓</span>}
+                        </div>
+                        <span className="text-xs font-bold text-[#6C47FF] bg-purple-50 px-2 py-0.5 rounded-full">{m.technologie}</span>
+                      </div>
+                      <p className="font-bold text-gray-900 text-sm mt-2">{m.nom}</p>
+                      <p className="text-[#6C47FF] font-black text-base mt-1">{m.prix_ht?.toLocaleString()} €</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* TABLEAU COMPARATIF */}
+              {sel.length > 0 && (
+                <div className="bg-white rounded-3xl border border-gray-100 shadow-xl overflow-hidden">
+                  <div className="p-6 border-b border-gray-100 bg-gradient-to-r from-purple-50 to-white">
+                    <h2 className="text-xl font-black text-gray-900">
+                      Comparaison detaillee <span className="text-[#6C47FF]">({sel.length} machines)</span>
+                    </h2>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="bg-gray-50">
+                          <th className="text-left px-6 py-4 text-sm font-bold text-gray-500 w-40">Critere</th>
+                          {sel.map(m => (
+                            <th key={m.id} className="px-6 py-4 text-center">
+                              <div className="text-sm font-black text-gray-900">{m.nom}</div>
+                              <div className="text-xs font-bold text-[#6C47FF] mt-0.5">{m.technologie}</div>
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {[
+                          { label: "Prix HT", key: "prix_ht", format: (v: number) => `${v?.toLocaleString()} €` },
+                          { label: "Garantie", key: "garantie_annees", format: (v: number) => `${v} ans` },
+                          { label: "Puissance", key: "puissance_w", format: (v: number) => `${v} W` },
+                          { label: "Poids", key: "poids_kg", format: (v: number) => `${v} kg` },
+                          { label: "Certifications", key: "certifications", format: (v: string) => v || "–" },
+                          { label: "Support FR", key: "support_fr", format: (v: boolean) => v ? "✅ Oui" : "❌ Non" },
+                        ].map((row, i) => (
+                          <tr key={row.key} className={i % 2 === 0 ? "bg-white" : "bg-gray-50/50"}>
+                            <td className="px-6 py-4 text-sm font-bold text-gray-600">{row.label}</td>
+                            {sel.map(m => (
+                              <td key={m.id} className="px-6 py-4 text-center text-sm text-gray-800 font-medium">
+                                {row.format((m as Record<string, unknown>)[row.key] as never)}
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="p-6 bg-gradient-to-br from-[#6C47FF] to-[#9B7DFF] text-center">
+                    <p className="text-white font-bold mb-3">Besoin d'un conseil personnalise ?</p>
+                    <Link href="/contact" className="inline-flex items-center gap-2 bg-white text-[#6C47FF] px-8 py-3 rounded-xl font-black text-sm hover:shadow-lg transition">
+                      Demander un devis gratuit →
+                    </Link>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </section>
+
+      {/* FOOTER */}
+      <footer className="bg-gray-900 text-white py-12 px-4 mt-10">
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-gradient-to-br from-[#6C47FF] to-[#9B7DFF] rounded-lg flex items-center justify-center">
+              <span className="text-white text-sm font-black">E</span>
+            </div>
+            <span className="text-lg font-black">Estheti<span className="text-[#9B7DFF]">Scan</span></span>
+          </div>
+          <div className="flex gap-8 text-sm text-gray-400">
+            <Link href="/guide" className="hover:text-white transition">Guide achat</Link>
+            <Link href="/comparateur" className="hover:text-white transition">Comparateur</Link>
+            <Link href="/contact" className="hover:text-white transition">Devis gratuit</Link>
+          </div>
+          <p className="text-sm text-gray-500">© 2026 EsthetiScan — zemits.store</p>
+        </div>
+      </footer>
     </main>
   )
 }
 
-export default function Comparateur() {
+export default function ComparateurPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-gray-400">Chargement...</div>}>
-      <ComparateurContent />
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="w-8 h-8 border-2 border-[#6C47FF] border-t-transparent rounded-full animate-spin"></div></div>}>
+      <ComparateurInner />
     </Suspense>
   )
 }
