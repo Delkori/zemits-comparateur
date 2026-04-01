@@ -1,7 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    domains: ['zemits.fr', 'zemits.store', 'lteqngcboeiwqjfmcwve.supabase.co'],
+    remotePatterns: [
+      { protocol: 'https', hostname: 'zemits.fr' },
+      { protocol: 'https', hostname: 'zemits.store' },
+      { protocol: 'https', hostname: 'lteqngcboeiwqjfmcwve.supabase.co' },
+    ],
   },
 }
 
