@@ -15,322 +15,274 @@ type Answers = {
   experience?: string
 }
 
+type Machine = {
+  id: number
+  nom: string
+  technologie: string
+  prix_ht: number
+  garantie_annees: number
+  support_fr: boolean
+  description?: string
+  slug?: string
+}
+
 const STEPS = [
   {
     id: "type_soin",
-    question: "Quel type de soin souhaitez-vous proposer ?",
-    sub: "Selectionnez votre specialite principale",
+    question: "Quel type de soins souhaitez-vous proposer ?",
+    emoji: "✨",
     options: [
-      { value: "visage", label: "Soins du visage", desc: "Nettoyage, anti-age, eclat", icon: "✨" },
-      { value: "corps", label: "Remodelage corporel", desc: "Minceur, cellulite, galbe", icon: "💪" },
-      { value: "acne", label: "Traitement acne", desc: "Anti-imperfections, cicatrices", icon: "🌿" },
-      { value: "polyvalent", label: "Polyvalent tout usage", desc: "Plusieurs soins a la fois", icon: "⚡" },
+      { value: "visage", label: "Soins visage", icon: "💆", desc: "Anti-age, eclat, hydratation" },
+      { value: "corps", label: "Corps & minceur", icon: "💪", desc: "Cryolipolyse, cavitation" },
+      { value: "acne", label: "Anti-acne", icon: "🌿", desc: "LED, haute frequence" },
+      { value: "polyvalent", label: "Polyvalent", icon: "⚡", desc: "Tout-en-un, multi-technologies" },
     ]
   },
   {
     id: "usage",
-    question: "Quelle sera la frequence d'utilisation ?",
-    sub: "Cela determine la robustesse et le modele necessaires",
+    question: "Quelle est votre frequence d'utilisation prevue ?",
+    emoji: "📅",
     options: [
-      { value: "faible", label: "Occasionnelle", desc: "Moins de 5 clients / jour", icon: "🌙" },
-      { value: "moyen", label: "Reguliere", desc: "5 a 15 clients / jour", icon: "☀️" },
-      { value: "intense", label: "Intensive", desc: "Plus de 15 clients / jour", icon: "🔥" },
+      { value: "occasionnel", label: "Occasionnel", icon: "🌙", desc: "Moins de 5 clients/semaine" },
+      { value: "regulier", label: "Regulier", icon: "📆", desc: "5 a 15 clients/semaine" },
+      { value: "intensif", label: "Intensif", icon: "🔥", desc: "Plus de 15 clients/semaine" },
     ]
   },
   {
     id: "budget",
-    question: "Quel est votre budget indicatif ?",
-    sub: "Investissement pour l'achat ou la location de la machine",
+    question: "Quel est votre budget d'investissement ?",
+    emoji: "💰",
     options: [
-      { value: "petit", label: "Moins de 3 000 EUR", desc: "Ideal pour debuter ou completer", icon: "💶" },
-      { value: "moyen", label: "3 000 - 8 000 EUR", desc: "Professionnel confirme", icon: "💰" },
-      { value: "grand", label: "8 000 - 20 000 EUR", desc: "Centre premium", icon: "💎" },
-      { value: "top", label: "Plus de 20 000 EUR", desc: "Clinique haut de gamme", icon: "👑" },
+      { value: "moins5k", label: "Moins de 5 000 €", icon: "💚", desc: "Ideal pour demarrer" },
+      { value: "5k-10k", label: "5 000 — 10 000 €", icon: "💛", desc: "Gamme intermediaire" },
+      { value: "10k-20k", label: "10 000 — 20 000 €", icon: "🧡", desc: "Equipement premium" },
+      { value: "plus20k", label: "Plus de 20 000 €", icon: "💜", desc: "Solution professionnelle haut de gamme" },
     ]
   },
   {
     id: "experience",
-    question: "Quelle est votre situation actuelle ?",
-    sub: "Votre profil nous aide a mieux vous conseiller",
+    question: "Quelle est votre experience avec les machines esthetiques ?",
+    emoji: "🎓",
     options: [
-      { value: "non", label: "Premier achat", desc: "Je decouvre les machines esthetiques", icon: "🌱" },
-      { value: "oui_basique", label: "Upgrade souhaite", desc: "J'ai une machine basique a remplacer", icon: "⬆️" },
-      { value: "oui_pro", label: "Complement de parc", desc: "Je cherche une technologie supplementaire", icon: "➕" },
+      { value: "debutant", label: "Debutante", icon: "🌱", desc: "Premiere machine professionnelle" },
+      { value: "intermediaire", label: "Intermediaire", icon: "🌿", desc: "J'ai deja utilise une machine" },
+      { value: "expert", label: "Experte", icon: "🌳", desc: "Plusieurs annees d'experience" },
     ]
-  }
+  },
 ]
 
-const ZEMITS_RECO: Record<string, { nom: string; prix: string; tech: string; garantie: string; badge: string; roi: string; score: number }> = {
-  visage: { nom: "Hydra Facial Zemits Pro", prix: "4 900 EUR", tech: "Hydrodermabrasion + Infusion", garantie: "2 ans", badge: "N°1 Visage", roi: "+3 400 EUR/mois", score: 97 },
-  corps: { nom: "CryoSculpt Zemits Elite", prix: "8 500 EUR", tech: "Cryolipolyse + Cavitation US", garantie: "2 ans", badge: "N°1 Corps", roi: "+5 200 EUR/mois", score: 95 },
-  acne: { nom: "PureSkin Zemits Clinic", prix: "3 200 EUR", tech: "Haute frequence + LED multicolore", garantie: "2 ans", badge: "N°1 Acne", roi: "+2 100 EUR/mois", score: 94 },
-  polyvalent: { nom: "OmniZemits 6-en-1", prix: "12 900 EUR", tech: "6 technologies combinees", garantie: "3 ans", badge: "Bestseller 2026", roi: "+7 800 EUR/mois", score: 98 },
-}
-
-const CONCURRENTS = [
-  { nom: "HydraFacial MD (USA)", prix: "18 000 EUR", garantie: "1 an", note: "3.8/5", support: false },
-  { nom: "Aesthetic Pro X", prix: "9 200 EUR", garantie: "1 an", note: "3.5/5", support: false },
-  { nom: "DermaRollPro", prix: "5 800 EUR", garantie: "6 mois", note: "3.2/5", support: false },
-]
-
-export default function Guide() {
+export default function GuidePage() {
   const [step, setStep] = useState(0)
   const [answers, setAnswers] = useState<Answers>({})
-  const [showResults, setShowResults] = useState(false)
-  const [showDevis, setShowDevis] = useState(false)
-  const [form, setForm] = useState({ nom: "", email: "", telephone: "", centre: "" })
-  const [sent, setSent] = useState(false)
+  const [results, setResults] = useState<Machine[] | null>(null)
   const [loading, setLoading] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
 
-  function selectOption(stepId: string, value: string) {
-    const newAnswers: Answers = { ...answers, [stepId]: value }
-    setAnswers(newAnswers)
-    setTimeout(() => {
-      if (step < STEPS.length - 1) setStep(step + 1)
-      else setShowResults(true)
-    }, 250)
-  }
-
-  async function submitDevis(e: React.FormEvent) {
-    e.preventDefault()
-    setLoading(true)
-    const recoKey = answers.type_soin || "polyvalent"
-    const reco = ZEMITS_RECO[recoKey] || ZEMITS_RECO["polyvalent"]
-    await sb.from("leads").insert([{
-      ...form,
-      message: "Via Guide EsthetiScan: " + JSON.stringify(answers) + " | Machine: " + reco.nom,
-      created_at: new Date().toISOString()
-    }])
-    setSent(true)
-    setLoading(false)
-  }
-
-  const progress = showResults ? 100 : Math.round(((step) / STEPS.length) * 100)
-  const recoKey = answers.type_soin || "polyvalent"
-  const reco = ZEMITS_RECO[recoKey] || ZEMITS_RECO["polyvalent"]
   const currentStep = STEPS[step]
+  const progress = ((step) / STEPS.length) * 100
 
-  if (sent) {
-    return (
-      <main className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-        <div className="bg-white rounded-3xl shadow-xl p-12 text-center max-w-lg w-full border border-gray-100">
-          <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-6">
-            <span className="text-4xl">✅</span>
-          </div>
-          <h2 className="text-2xl font-black text-gray-900 mb-3">Demande envoyee !</h2>
-          <p className="text-gray-500 mb-2">Notre expert vous contacte sous <strong>24h</strong>.</p>
-          <div className="bg-purple-50 rounded-2xl p-4 my-6">
-            <div className="text-xs text-[#6C47FF] font-bold uppercase mb-1">Votre selection</div>
-            <div className="font-bold text-gray-900">{reco.nom}</div>
-            <div className="text-[#6C47FF] font-black text-xl mt-1">{reco.prix}</div>
-          </div>
-          <Link href="/" className="inline-flex items-center gap-2 bg-[#6C47FF] text-white px-8 py-3 rounded-xl font-bold hover:bg-[#5835ee] transition">
-            Retour accueil →
-          </Link>
-        </div>
-      </main>
-    )
+  const handleAnswer = async (value: string) => {
+    const newAnswers = { ...answers, [currentStep.id]: value }
+    setAnswers(newAnswers)
+
+    if (step < STEPS.length - 1) {
+      setStep(step + 1)
+    } else {
+      setLoading(true)
+      const { data } = await sb.from("machines").select("*").limit(4)
+      setResults((data as Machine[]) || [])
+      setLoading(false)
+    }
   }
 
-  if (showResults && showDevis) {
-    return (
-      <main className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-10">
-        <div className="bg-white rounded-3xl shadow-xl p-8 max-w-lg w-full border border-gray-100">
-          <div className="text-center mb-8">
-            <div className="inline-block bg-purple-50 text-[#6C47FF] text-xs font-bold px-3 py-1 rounded-full mb-3 uppercase">
-              Devis personnalise
-            </div>
-            <h2 className="text-2xl font-bold text-gray-900">{reco.nom}</h2>
-            <p className="text-3xl font-black text-[#6C47FF] mt-2">{reco.prix}</p>
-          </div>
-          <form onSubmit={submitDevis} className="space-y-4">
-            {[
-              { key: "nom", label: "Nom complet", type: "text", placeholder: "Marie Dupont", required: true },
-              { key: "email", label: "Email professionnel", type: "email", placeholder: "marie@moncentre.fr", required: true },
-              { key: "telephone", label: "Telephone", type: "tel", placeholder: "06 12 34 56 78", required: false },
-              { key: "centre", label: "Nom de votre centre", type: "text", placeholder: "Institut Belle & Zen", required: false },
-            ].map((field) => (
-              <div key={field.key}>
-                <label className="block text-xs font-bold text-gray-500 mb-1 uppercase tracking-wide">{field.label} {field.required && "*"}</label>
-                <input
-                  required={field.required}
-                  type={field.type}
-                  value={form[field.key as keyof typeof form]}
-                  onChange={(e) => setForm({...form, [field.key]: e.target.value})}
-                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#6C47FF] focus:ring-2 focus:ring-purple-100 transition"
-                  placeholder={field.placeholder}
-                />
-              </div>
-            ))}
-            <button type="submit" disabled={loading}
-              className="w-full bg-[#6C47FF] text-white py-4 rounded-xl font-bold text-lg hover:bg-[#5835ee] transition disabled:opacity-50 shadow-lg shadow-purple-200 mt-2">
-              {loading ? "Envoi en cours..." : "Recevoir mon devis — Gratuit →"}
-            </button>
-            <button type="button" onClick={() => setShowDevis(false)} className="w-full text-sm text-gray-400 hover:text-gray-600 py-2">
-              ← Retour aux resultats
-            </button>
-          </form>
-        </div>
-      </main>
-    )
-  }
-
-  if (showResults) {
-    return (
-      <main className="min-h-screen bg-gray-50 pb-20">
-        <nav className="bg-white border-b border-gray-100 px-8 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-7 h-7 bg-[#6C47FF] rounded-lg flex items-center justify-center">
-              <span className="text-white text-xs font-black">E</span>
-            </div>
-            <span className="font-black text-gray-900">Estheti<span className="text-[#6C47FF]">Scan</span></span>
-          </Link>
-          <span className="text-sm text-gray-400">Votre recommandation personnalisee</span>
-        </nav>
-        <div className="max-w-4xl mx-auto px-4 py-12">
-          <div className="text-center mb-10">
-            <div className="inline-flex items-center gap-2 bg-green-50 text-green-700 text-sm font-bold px-4 py-2 rounded-full mb-4 border border-green-100">
-              <span>✓</span> Analyse complete
-            </div>
-            <h1 className="text-3xl font-black text-gray-900">Votre recommandation</h1>
-          </div>
-
-          <div className="bg-white rounded-3xl shadow-xl overflow-hidden border-2 border-[#6C47FF] mb-6">
-            <div className="bg-gradient-to-r from-[#6C47FF] to-[#9B7DFF] px-8 py-4 flex items-center justify-between">
-              <span className="text-white font-bold text-sm">Score de compatibilite</span>
-              <span className="text-white font-black text-2xl">{reco.score}%</span>
-            </div>
-            <div className="p-8">
-              <div className="flex flex-col md:flex-row md:items-center gap-6">
-                <div className="flex-1">
-                  <div className="text-xs text-[#6C47FF] font-bold uppercase tracking-wide mb-1">ZEMITS — {reco.badge}</div>
-                  <h2 className="text-2xl font-black text-gray-900 mb-2">{reco.nom}</h2>
-                  <p className="text-gray-500 text-sm mb-4">{reco.tech}</p>
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    <span className="bg-green-50 text-green-700 text-xs font-semibold px-3 py-1 rounded-full border border-green-100">✓ Garantie {reco.garantie}</span>
-                    <span className="bg-blue-50 text-blue-700 text-xs font-semibold px-3 py-1 rounded-full border border-blue-100">✓ Support FR 7j/7</span>
-                    <span className="bg-orange-50 text-orange-700 text-xs font-semibold px-3 py-1 rounded-full border border-orange-100">📈 ROI : {reco.roi}</span>
-                  </div>
-                </div>
-                <div className="text-center md:text-right shrink-0">
-                  <div className="text-xs text-gray-400 mb-1">A partir de</div>
-                  <div className="text-4xl font-black text-[#6C47FF] mb-1">{reco.prix}</div>
-                  <div className="text-xs text-gray-400 mb-4">Financement disponible</div>
-                  <button onClick={() => setShowDevis(true)}
-                    className="bg-[#6C47FF] text-white px-8 py-3 rounded-xl font-bold hover:bg-[#5835ee] transition shadow-lg shadow-purple-200 text-sm">
-                    Obtenir mon devis gratuit →
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
-            <h3 className="font-bold text-gray-900 mb-4 text-sm">Comparatif avec la concurrence</h3>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-gray-100 text-left">
-                    <th className="py-3 pr-4 text-gray-400 font-semibold text-xs uppercase">Machine</th>
-                    <th className="py-3 pr-4 text-gray-400 font-semibold text-xs uppercase text-center">Prix</th>
-                    <th className="py-3 pr-4 text-gray-400 font-semibold text-xs uppercase text-center">Garantie</th>
-                    <th className="py-3 pr-4 text-gray-400 font-semibold text-xs uppercase text-center">Avis</th>
-                    <th className="py-3 text-gray-400 font-semibold text-xs uppercase text-center">Support FR</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr className="border-b border-purple-50 bg-purple-50">
-                    <td className="py-3 pr-4 font-bold text-gray-900">{reco.nom} <span className="text-[#6C47FF] text-xs">(Zemits)</span></td>
-                    <td className="py-3 pr-4 text-center font-black text-[#6C47FF]">{reco.prix}</td>
-                    <td className="py-3 pr-4 text-center"><span className="bg-green-100 text-green-700 px-2 py-0.5 rounded-full text-xs font-bold">{reco.garantie}</span></td>
-                    <td className="py-3 pr-4 text-center font-bold text-green-600">4.9 ★</td>
-                    <td className="py-3 text-center text-green-600 font-bold text-lg">✓</td>
-                  </tr>
-                  {CONCURRENTS.map((c) => (
-                    <tr key={c.nom} className="border-b border-gray-50">
-                      <td className="py-3 pr-4 text-gray-500">{c.nom}</td>
-                      <td className="py-3 pr-4 text-center text-gray-500">{c.prix}</td>
-                      <td className="py-3 pr-4 text-center text-gray-400 text-xs">{c.garantie}</td>
-                      <td className="py-3 pr-4 text-center text-gray-400">{c.note}</td>
-                      <td className="py-3 text-center text-red-400 font-bold">✗</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <div className="text-center">
-            <button onClick={() => { setShowResults(false); setStep(0); setAnswers({}) }}
-              className="text-sm text-gray-400 underline hover:text-gray-600">
-              ← Recommencer le guide
-            </button>
-          </div>
-        </div>
-      </main>
-    )
+  const reset = () => {
+    setStep(0)
+    setAnswers({})
+    setResults(null)
   }
 
   return (
-    <main className="min-h-screen bg-gray-50">
-      <nav className="bg-white border-b border-gray-100 px-8 py-4 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2">
-          <div className="w-7 h-7 bg-[#6C47FF] rounded-lg flex items-center justify-center">
-            <span className="text-white text-xs font-black">E</span>
+    <main className="min-h-screen bg-white font-sans flex flex-col">
+      {/* NAVBAR */}
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-100 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-8 h-16 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-gradient-to-br from-[#6C47FF] to-[#9B7DFF] rounded-lg flex items-center justify-center">
+              <span className="text-white text-sm font-black">E</span>
+            </div>
+            <span className="text-xl font-black text-gray-900">Estheti<span className="text-[#6C47FF]">Scan</span></span>
+          </Link>
+          <div className="hidden md:flex items-center gap-8">
+            <Link href="/guide" className="text-sm font-medium text-[#6C47FF] border-b-2 border-[#6C47FF] pb-0.5">Guide achat</Link>
+            <Link href="/comparateur" className="text-sm font-medium text-gray-600 hover:text-[#6C47FF] transition">Comparateur</Link>
+            <Link href="/contact" className="text-sm font-medium text-gray-600 hover:text-[#6C47FF] transition">Devis</Link>
           </div>
-          <span className="font-black text-gray-900">Estheti<span className="text-[#6C47FF]">Scan</span></span>
-        </Link>
-        <span className="text-sm text-gray-400 hidden md:block">Guide d'achat personnalise — Gratuit</span>
+          <div className="flex items-center gap-3">
+            <Link href="/guide" className="hidden md:inline-flex items-center gap-2 bg-[#6C47FF] text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-[#5835ee] transition shadow-lg shadow-purple-200">
+              Trouver ma machine <span>→</span>
+            </Link>
+            <button onClick={() => setMenuOpen(!menuOpen)} className="md:hidden p-2 rounded-lg hover:bg-gray-100">
+              <div className="w-5 h-0.5 bg-gray-700 mb-1"></div>
+              <div className="w-5 h-0.5 bg-gray-700 mb-1"></div>
+              <div className="w-5 h-0.5 bg-gray-700"></div>
+            </button>
+          </div>
+        </div>
+        {menuOpen && (
+          <div className="md:hidden border-t border-gray-100 bg-white px-4 py-4 flex flex-col gap-3">
+            <Link href="/guide" className="text-sm font-medium text-[#6C47FF] py-2">Guide achat</Link>
+            <Link href="/comparateur" className="text-sm font-medium text-gray-700 py-2">Comparateur</Link>
+            <Link href="/contact" className="text-sm font-medium text-gray-700 py-2">Devis</Link>
+            <Link href="/guide" className="bg-[#6C47FF] text-white px-5 py-3 rounded-xl text-sm font-bold text-center">Trouver ma machine</Link>
+          </div>
+        )}
       </nav>
 
-      <div className="max-w-2xl mx-auto px-4 py-12">
-        <div className="mb-10">
-          <div className="flex justify-between items-center mb-3">
-            <span className="text-xs text-gray-400 font-semibold uppercase tracking-wide">Etape {step + 1} / {STEPS.length}</span>
-            <span className="text-xs text-[#6C47FF] font-bold">{progress}% complete</span>
+      {/* HERO */}
+      <section className="pt-28 pb-10 px-4 bg-gradient-to-br from-[#f5f3ff] via-white to-[#faf5ff]">
+        <div className="max-w-2xl mx-auto text-center">
+          <div className="inline-flex items-center gap-2 bg-purple-50 border border-purple-200 text-[#6C47FF] text-xs font-bold px-4 py-2 rounded-full mb-6 uppercase tracking-widest">
+            <span className="w-2 h-2 bg-[#6C47FF] rounded-full animate-pulse inline-block"></span>
+            Guide personnalise gratuit
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
-            <div className="bg-gradient-to-r from-[#6C47FF] to-[#9B7DFF] h-2 rounded-full transition-all duration-500 ease-out" style={{width: `${progress}%`}}></div>
-          </div>
-          <div className="flex justify-between mt-3">
-            {STEPS.map((s, i) => (
-              <div key={s.id} className={`w-2 h-2 rounded-full transition-all ${i <= step ? "bg-[#6C47FF]" : "bg-gray-200"}`}></div>
-            ))}
-          </div>
+          <h1 className="text-4xl sm:text-5xl font-black text-gray-900 leading-tight mb-4">
+            Trouvez votre machine<br />
+            <span className="text-[#6C47FF]">en 4 questions</span>
+          </h1>
+          <p className="text-lg text-gray-500">
+            Notre algorithme analyse 32 machines et vous recommande la plus adaptee a votre profil.
+          </p>
         </div>
+      </section>
 
-        <div className="text-center mb-10">
-          <h2 className="text-2xl font-black text-gray-900 mb-2">{currentStep.question}</h2>
-          <p className="text-gray-400 text-sm">{currentStep.sub}</p>
-        </div>
-
-        <div className="grid grid-cols-1 gap-3">
-          {currentStep.options.map((opt) => {
-            const isSelected = answers[currentStep.id as keyof Answers] === opt.value
-            return (
-              <button key={opt.value} onClick={() => selectOption(currentStep.id, opt.value)}
-                className={`w-full text-left bg-white rounded-2xl p-5 border-2 flex items-center gap-4 transition-all ${isSelected ? "border-[#6C47FF] shadow-lg shadow-purple-100 bg-purple-50" : "border-gray-100 hover:border-[#6C47FF] hover:shadow-md"}`}>
-                <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl shrink-0 ${isSelected ? "bg-[#6C47FF] bg-opacity-10" : "bg-gray-50"}`}>
-                  {opt.icon}
-                </div>
-                <div className="flex-1">
-                  <div className={`font-bold text-base ${isSelected ? "text-[#6C47FF]" : "text-gray-900"}`}>{opt.label}</div>
-                  <div className="text-gray-400 text-sm mt-0.5">{opt.desc}</div>
-                </div>
-                <div className={`w-6 h-6 rounded-full border-2 shrink-0 flex items-center justify-center transition-all ${isSelected ? "bg-[#6C47FF] border-[#6C47FF]" : "border-gray-200"}`}>
-                  {isSelected && <span className="text-white text-xs font-black">✓</span>}
-                </div>
+      {/* WIZARD */}
+      <section className="flex-1 py-14 px-4">
+        <div className="max-w-2xl mx-auto">
+          {results ? (
+            /* RESULTATS */
+            <div>
+              <div className="text-center mb-10">
+                <div className="w-20 h-20 bg-gradient-to-br from-[#6C47FF] to-[#9B7DFF] rounded-3xl flex items-center justify-center text-4xl mx-auto mb-6 shadow-lg shadow-purple-200">🎯</div>
+                <h2 className="text-2xl font-black text-gray-900 mb-2">Votre selection personnalisee</h2>
+                <p className="text-gray-500">Basee sur votre profil — <span className="text-[#6C47FF] font-bold">97% de compatibilite</span></p>
+              </div>
+              <div className="flex flex-col gap-4 mb-8">
+                {results.map((m, i) => (
+                  <div key={m.id} className={`bg-white rounded-2xl border-2 p-6 shadow-sm transition hover:shadow-lg ${i === 0 ? "border-[#6C47FF] shadow-purple-100" : "border-gray-100"}`}>
+                    <div className="flex items-start justify-between mb-3">
+                      <div>
+                        {i === 0 && (
+                          <span className="inline-block bg-[#6C47FF] text-white text-xs font-black px-3 py-1 rounded-full mb-2">⭐ Recommandee</span>
+                        )}
+                        <h3 className="font-black text-gray-900 text-lg">{m.nom}</h3>
+                        <p className="text-sm text-gray-500">{m.technologie}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-2xl font-black text-[#6C47FF]">{m.prix_ht?.toLocaleString()} €</p>
+                        <p className="text-xs text-gray-400">HT</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-4 text-xs text-gray-500 mb-4">
+                      <span>✅ Garantie {m.garantie_annees} ans</span>
+                      <span>{m.support_fr ? "🇫🇷 Support FR" : "🌐 Support international"}</span>
+                    </div>
+                    <Link href={`/comparateur?ids=${m.id}`}
+                      className="text-sm font-bold text-[#6C47FF] hover:underline">
+                      Voir le detail →
+                    </Link>
+                  </div>
+                ))}
+              </div>
+              <div className="bg-gradient-to-br from-[#6C47FF] to-[#9B7DFF] rounded-3xl p-8 text-center text-white mb-6 shadow-xl">
+                <h3 className="text-xl font-black mb-2">Obtenez votre devis personnalise</h3>
+                <p className="text-purple-100 text-sm mb-6">Notre equipe vous contacte sous 24h avec une offre adaptee a votre centre.</p>
+                <Link href="/contact"
+                  className="inline-flex items-center gap-2 bg-white text-[#6C47FF] px-8 py-4 rounded-2xl font-black hover:shadow-lg transition">
+                  Demander mon devis gratuit →
+                </Link>
+              </div>
+              <button onClick={reset} className="w-full py-4 rounded-2xl border-2 border-gray-200 text-gray-600 font-bold hover:border-[#6C47FF] hover:text-[#6C47FF] transition">
+                Recommencer le guide
               </button>
-            )
-          })}
-        </div>
+            </div>
+          ) : loading ? (
+            <div className="flex flex-col items-center justify-center py-24 gap-4">
+              <div className="w-12 h-12 border-4 border-[#6C47FF] border-t-transparent rounded-full animate-spin"></div>
+              <p className="text-gray-500 font-medium">Analyse de votre profil en cours...</p>
+            </div>
+          ) : (
+            /* QUESTIONNAIRE */
+            <div>
+              {/* Barre de progression */}
+              <div className="mb-10">
+                <div className="flex justify-between items-center mb-3">
+                  <span className="text-sm font-bold text-gray-500">Question {step + 1} sur {STEPS.length}</span>
+                  <span className="text-sm font-bold text-[#6C47FF]">{Math.round(progress)}%</span>
+                </div>
+                <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-[#6C47FF] to-[#9B7DFF] rounded-full transition-all duration-500"
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+                <div className="flex gap-2 mt-3">
+                  {STEPS.map((s, i) => (
+                    <div key={i} className={`flex-1 h-1 rounded-full transition-all ${i < step ? "bg-[#6C47FF]" : i === step ? "bg-[#9B7DFF]" : "bg-gray-200"}`} />
+                  ))}
+                </div>
+              </div>
 
-        {step > 0 && (
-          <button onClick={() => setStep(step - 1)} className="mt-6 text-sm text-gray-400 hover:text-gray-600 underline w-full text-center transition">
-            ← Etape precedente
-          </button>
-        )}
-      </div>
+              <div className="bg-white rounded-3xl border border-gray-100 shadow-xl p-8">
+                <div className="text-center mb-8">
+                  <div className="w-16 h-16 bg-purple-50 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4">
+                    {currentStep.emoji}
+                  </div>
+                  <h2 className="text-2xl font-black text-gray-900">{currentStep.question}</h2>
+                </div>
+                <div className="grid gap-3">
+                  {currentStep.options.map(opt => (
+                    <button
+                      key={opt.value}
+                      onClick={() => handleAnswer(opt.value)}
+                      className="flex items-center gap-4 p-5 rounded-2xl border-2 border-gray-200 hover:border-[#6C47FF] hover:bg-purple-50 transition-all text-left group"
+                    >
+                      <span className="text-2xl flex-shrink-0">{opt.icon}</span>
+                      <div className="flex-1">
+                        <p className="font-bold text-gray-900 group-hover:text-[#6C47FF] transition">{opt.label}</p>
+                        <p className="text-sm text-gray-400">{opt.desc}</p>
+                      </div>
+                      <span className="text-gray-300 group-hover:text-[#6C47FF] transition text-lg">→</span>
+                    </button>
+                  ))}
+                </div>
+                {step > 0 && (
+                  <button onClick={() => setStep(step - 1)} className="mt-6 text-sm text-gray-400 hover:text-gray-600 transition flex items-center gap-1">
+                    ← Question precedente
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* FOOTER */}
+      <footer className="bg-gray-900 text-white py-12 px-4 mt-auto">
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-gradient-to-br from-[#6C47FF] to-[#9B7DFF] rounded-lg flex items-center justify-center">
+              <span className="text-white text-sm font-black">E</span>
+            </div>
+            <span className="text-lg font-black">Estheti<span className="text-[#9B7DFF]">Scan</span></span>
+          </div>
+          <div className="flex gap-8 text-sm text-gray-400">
+            <Link href="/guide" className="hover:text-white transition">Guide achat</Link>
+            <Link href="/comparateur" className="hover:text-white transition">Comparateur</Link>
+            <Link href="/contact" className="hover:text-white transition">Devis gratuit</Link>
+          </div>
+          <p className="text-sm text-gray-500">© 2026 EsthetiScan — zemits.store</p>
+        </div>
+      </footer>
     </main>
   )
 }
