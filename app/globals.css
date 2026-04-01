@@ -2,13 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --zemits-gold: #C9A84C;
-  --zemits-dark: #1a1a2e;
-  --zemits-light: #f8f4ef;
-}
-
 body {
-  background-color: var(--zemits-light);
-  color: var(--zemits-dark);
+  background-color: #f8f4ef;
+  color: #1a1a2e;
 }
